@@ -1,11 +1,11 @@
 # Fundy Research CNPG
 
-A custom PostgreSQL Docker image for use with the [CloudNativePG](https://cloudnative-pg.io/) operator, featuring pgvector, pgvectorscale, and pg_textsearch extensions for AI-powered vector and text search.
+A custom PostgreSQL Docker image for use with the [CloudNativePG](https://cloudnative-pg.io/) operator, featuring the CNPG-provided pgvector extension plus pgvectorscale and pg_textsearch for AI-powered vector and text search.
 
 ## Purpose
 
-This image extends the official CloudNativePG PostgreSQL base image with:
-- **pgvector** - Open-source vector similarity search for PostgreSQL
+This image extends a pinned official CloudNativePG PostgreSQL standard image with:
+- **pgvector** - Open-source vector similarity search for PostgreSQL (already included in the CNPG standard base image)
 - **pgvectorscale** - High-performance StreamingDiskANN index for pgvector (Rust/PGRX extension by Timescale)
 - **pg_textsearch** - BM25 relevance-ranked full-text search for PostgreSQL
 
@@ -15,9 +15,9 @@ Together, these extensions enable hybrid search (vector similarity + BM25 keywor
 
 | Extension | Default Version | Source |
 |-----------|-----------------|--------|
-| pgvector | v0.8.2 | [pgvector/pgvector](https://github.com/pgvector/pgvector) |
+| pgvector | bundled in CNPG standard image | [pgvector/pgvector](https://github.com/pgvector/pgvector) |
 | pgvectorscale | 0.9.0 | [timescale/pgvectorscale](https://github.com/timescale/pgvectorscale) |
-| pg_textsearch | main | [timescale/pg_textsearch](https://github.com/timescale/pg_textsearch) |
+| pg_textsearch | v0.6.1 | [timescale/pg_textsearch](https://github.com/timescale/pg_textsearch) |
 
 ## Supported Architectures
 
@@ -33,6 +33,8 @@ Together, these extensions enable hybrid search (vector similarity + BM25 keywor
 ## Usage with CloudNativePG
 
 Create a CloudNativePG Cluster manifest that uses this image:
+
+- Example manifest: `examples/cluster-pg17.yaml`
 
 ```yaml
 apiVersion: postgresql.cnpg.io/v1
@@ -81,9 +83,9 @@ docker build -t fundy_research_cnpg:local .
 
 ```bash
 docker build \
-  --build-arg PGVECTOR_VERSION=v0.8.2 \
+  --build-arg CNPG_BASE_IMAGE=ghcr.io/cloudnative-pg/postgresql:17.9-202603160825-standard-bookworm@sha256:bc45cd03c67bf6603109181d23d6f7c9a7f3bc9af71848c91743e732a715538c \
   --build-arg PGVECTORSCALE_VERSION=0.9.0 \
-  --build-arg PG_TEXTSEARCH_VERSION=main \
+  --build-arg PG_TEXTSEARCH_VERSION=v0.6.1 \
   --build-arg PG_VERSION=17 \
   -t fundy_research_cnpg:local .
 ```
@@ -99,6 +101,17 @@ docker build --platform linux/amd64 -t fundy_research_cnpg:local-amd64 .
 ```
 
 > **Note:** The build includes compiling Rust code (pgvectorscale via PGRX), so it takes significantly longer than a standard C extension build (~10-20 min depending on hardware).
+
+### Smoke test the built image
+
+After building the image, run:
+
+```bash
+chmod +x scripts/smoke-test.sh
+./scripts/smoke-test.sh fundy_research_cnpg:test
+```
+
+The smoke test starts a temporary PostgreSQL instance inside the container, preloads `pg_textsearch`, verifies that `vector`, `vectorscale`, and `pg_textsearch` are available, and creates all three extensions in a test database.
 
 ## Creating a New Release
 
@@ -161,8 +174,9 @@ LIMIT 10;
 ## Notes
 
 - This image is designed for CloudNativePG and does **not** include Patroni or pgBackRest (CNPG handles HA and backups differently)
-- `pg_textsearch` must be added to `shared_preload_libraries` in the CNPG Cluster manifest
+- `pg_textsearch` must be added to `shared_preload_libraries` in the CNPG Cluster manifest before `CREATE EXTENSION pg_textsearch`
 - pgvectorscale automatically installs pgvector as a dependency when using `CASCADE`
+- The image is built from a pinned CNPG `standard` base image so rebuilds are reproducible and keep the bundled pgvector version aligned with the base image
 - The image runs as user 26 (postgres) as required by CloudNativePG
 - pgvectorscale requires CPU support for AVX2+FMA (x86_64) or NEON (ARM64)
 
