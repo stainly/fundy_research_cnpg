@@ -1,0 +1,24 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: research-cluster
+spec:
+  instances: 2
+  imageName: ghcr.io/stainly/fundy_research_cnpg:v1.0.0
+
+  postgresql:
+    shared_preload_libraries:
+      - pg_textsearch
+    parameters:
+      pg_textsearch.default_limit: "1000"
+      max_parallel_maintenance_workers: "4"
+      maintenance_work_mem: "256MB"
+
+  bootstrap:
+    initdb:
+      database: app
+      owner: app
+
+  storage:
+    size: 10Gi
+    storageClass: your-storage-class

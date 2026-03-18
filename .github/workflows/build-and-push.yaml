@@ -8,18 +8,14 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
-      pgvector_version:
-        description: 'pgvector version'
-        required: false
-        default: 'v0.8.2'
       pgvectorscale_version:
         description: 'pgvectorscale version'
         required: false
         default: '0.9.0'
       pg_textsearch_version:
-        description: 'pg_textsearch version (branch or tag)'
+        description: 'pg_textsearch version (tag)'
         required: false
-        default: 'main'
+        default: 'v0.6.1'
       pg_version:
         description: 'PostgreSQL version'
         required: false
@@ -32,10 +28,10 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  PGVECTOR_VERSION: ${{ github.event.inputs.pgvector_version || 'v0.8.2' }}
   PGVECTORSCALE_VERSION: ${{ github.event.inputs.pgvectorscale_version || '0.9.0' }}
-  PG_TEXTSEARCH_VERSION: ${{ github.event.inputs.pg_textsearch_version || 'main' }}
+  PG_TEXTSEARCH_VERSION: ${{ github.event.inputs.pg_textsearch_version || 'v0.6.1' }}
   PG_VERSION: ${{ github.event.inputs.pg_version || '17' }}
+  CNPG_BASE_IMAGE: ghcr.io/cloudnative-pg/postgresql:17.9-202603160825-standard-bookworm@sha256:bc45cd03c67bf6603109181d23d6f7c9a7f3bc9af71848c91743e732a715538c
 
 jobs:
   build-and-push:
@@ -78,7 +74,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            PGVECTOR_VERSION=${{ env.PGVECTOR_VERSION }}
+            CNPG_BASE_IMAGE=${{ env.CNPG_BASE_IMAGE }}
             PGVECTORSCALE_VERSION=${{ env.PGVECTORSCALE_VERSION }}
             PG_TEXTSEARCH_VERSION=${{ env.PG_TEXTSEARCH_VERSION }}
             PG_VERSION=${{ env.PG_VERSION }}
