@@ -63,7 +63,7 @@ jobs:
             type=ref,event=tag
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=pg${{ env.PG_VERSION }}-latest,enable={{is_default_branch}}
-            type=sha,prefix=,suffix=,format=short
+            type=sha,prefix=${{ env.PG_VERSION }}.,suffix=,format=short
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
