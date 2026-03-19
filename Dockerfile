@@ -91,6 +91,11 @@ ARG PG_VERSION=17
 
 USER root
 
+# Install barman-cli-cloud for WAL archiving and backup support
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    barman-cli-cloud \
+    && rm -rf /var/lib/apt/lists/*
+
 # --- pgvectorscale and pg_textsearch ---
 COPY --from=pgvectorscale-builder /tmp/vectorscale-artifacts/ /
 COPY --from=textsearch-builder /tmp/textsearch-artifacts/ /
