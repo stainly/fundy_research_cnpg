@@ -58,7 +58,7 @@ RUN mkdir -p /tmp/vectorscale-artifacts/usr/lib/postgresql/${PG_VERSION}/lib \
 # --- Stage 2: Build pg_textsearch ---
 FROM ${CNPG_BASE_IMAGE} AS textsearch-builder
 
-ARG PG_TEXTSEARCH_VERSION=v1.1.0
+ARG PG_TEXTSEARCH_VERSION=v1.4.0
 ARG PG_VERSION=17
 
 USER root

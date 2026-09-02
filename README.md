@@ -17,7 +17,7 @@ Together, these extensions enable hybrid search (vector similarity + BM25 keywor
 |-----------|-----------------|--------|
 | pgvector | bundled in CNPG standard image | [pgvector/pgvector](https://github.com/pgvector/pgvector) |
 | pgvectorscale | 0.9.0 | [timescale/pgvectorscale](https://github.com/timescale/pgvectorscale) |
-| pg_textsearch | v1.3.0 | [timescale/pg_textsearch](https://github.com/timescale/pg_textsearch) |
+| pg_textsearch | v1.4.0 | [timescale/pg_textsearch](https://github.com/timescale/pg_textsearch) |
 
 ## Supported Architectures
 
@@ -85,7 +85,7 @@ docker build -t fundy_research_cnpg:local .
 docker build \
   --build-arg CNPG_BASE_IMAGE=ghcr.io/cloudnative-pg/postgresql:17.9-202603160825-standard-bookworm@sha256:bc45cd03c67bf6603109181d23d6f7c9a7f3bc9af71848c91743e732a715538c \
   --build-arg PGVECTORSCALE_VERSION=0.9.0 \
-  --build-arg PG_TEXTSEARCH_VERSION=v1.3.0 \
+  --build-arg PG_TEXTSEARCH_VERSION=v1.4.0 \
   --build-arg PG_VERSION=17 \
   -t fundy_research_cnpg:local .
 ```
