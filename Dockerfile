@@ -37,6 +37,13 @@ RUN git clone --branch ${PGVECTORSCALE_VERSION} --depth 1 \
 
 WORKDIR /tmp/pgvectorscale/pgvectorscale
 
+# PostgreSQL keeps GUC descriptions by pointer, but pgvectorscale pallocs them
+# (.as_pg_cstr()), so they dangle and `SELECT * FROM pg_settings` segfaults.
+# Use static C string literals instead; fail the build if the pattern changes.
+RUN perl -0pi -e 's/unsafe\s*\{\s*std::ffi::CStr::from_ptr\(\s*("(?:[^"\\]|\\.)*")\s*\.as_pg_cstr\(\),?\s*\)\s*,?\s*\}/c$1/g' \
+        src/access_method/guc.rs \
+    && ! grep -n "as_pg_cstr" src/access_method/guc.rs
+
 RUN cargo install --locked cargo-pgrx \
     --version $(cargo metadata --format-version 1 | jq -r '.packages[] | select(.name == "pgrx") | .version')
 
