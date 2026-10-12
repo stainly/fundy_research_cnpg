@@ -109,3 +109,15 @@ COPY --from=textsearch-builder /tmp/textsearch-artifacts/ /
 
 # CloudNativePG runs with user 26 (postgres)
 USER 26
+
+# Fail the build when an extension cannot load into this server, e.g. built against newer headers than
+# the base image's postgres: the undefined symbol would only show when the cluster starts.
+RUN export PATH=/usr/lib/postgresql/${PG_VERSION}/bin:$PATH \
+    && initdb -D /tmp/loadcheck -U postgres --auth=trust >/dev/null \
+    && pg_ctl -D /tmp/loadcheck -l /tmp/loadcheck.log -w \
+       -o "-c listen_addresses='' -c unix_socket_directories=/tmp -c shared_preload_libraries=pg_textsearch" start \
+    && psql -X -q -v ON_ERROR_STOP=1 -h /tmp -U postgres \
+       -c "CREATE EXTENSION vectorscale CASCADE" -c "CREATE EXTENSION pg_textsearch" \
+    && pg_ctl -D /tmp/loadcheck -w stop \
+    || { cat /tmp/loadcheck.log; exit 1; }; \
+    rm -rf /tmp/loadcheck /tmp/loadcheck.log
