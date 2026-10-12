@@ -1,4 +1,4 @@
-ARG CNPG_BASE_IMAGE=ghcr.io/cloudnative-pg/postgresql:17.9-202603160825-standard-bookworm@sha256:bc45cd03c67bf6603109181d23d6f7c9a7f3bc9af71848c91743e732a715538c
+ARG CNPG_BASE_IMAGE=ghcr.io/cloudnative-pg/postgresql:17.11-202610050823-standard-bookworm@sha256:49c1dd79092d7d8dad03d07151ef7157416e233576c639af8d60ec02c4ae297d
 ARG PG_VERSION=17
 
 # =============================================================================
@@ -65,7 +65,7 @@ RUN mkdir -p /tmp/vectorscale-artifacts/usr/lib/postgresql/${PG_VERSION}/lib \
 # --- Stage 2: Build pg_textsearch ---
 FROM ${CNPG_BASE_IMAGE} AS textsearch-builder
 
-ARG PG_TEXTSEARCH_VERSION=v1.4.0
+ARG PG_TEXTSEARCH_VERSION=v1.5.1
 ARG PG_VERSION=17
 
 USER root
@@ -109,3 +109,15 @@ COPY --from=textsearch-builder /tmp/textsearch-artifacts/ /
 
 # CloudNativePG runs with user 26 (postgres)
 USER 26
+
+# Fail the build when an extension cannot load into this server, e.g. built against newer headers than
+# the base image's postgres: the undefined symbol would only show when the cluster starts.
+RUN export PATH=/usr/lib/postgresql/${PG_VERSION}/bin:$PATH \
+    && initdb -D /tmp/loadcheck -U postgres --auth=trust >/dev/null \
+    && pg_ctl -D /tmp/loadcheck -l /tmp/loadcheck.log -w \
+       -o "-c listen_addresses='' -c unix_socket_directories=/tmp -c shared_preload_libraries=pg_textsearch" start \
+    && psql -X -q -v ON_ERROR_STOP=1 -h /tmp -U postgres \
+       -c "CREATE EXTENSION vectorscale CASCADE" -c "CREATE EXTENSION pg_textsearch" \
+    && pg_ctl -D /tmp/loadcheck -w stop \
+    || { cat /tmp/loadcheck.log; exit 1; }; \
+    rm -rf /tmp/loadcheck /tmp/loadcheck.log
