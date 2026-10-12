@@ -1,4 +1,4 @@
-ARG CNPG_BASE_IMAGE=ghcr.io/cloudnative-pg/postgresql:17.9-202603160825-standard-bookworm@sha256:bc45cd03c67bf6603109181d23d6f7c9a7f3bc9af71848c91743e732a715538c
+ARG CNPG_BASE_IMAGE=ghcr.io/cloudnative-pg/postgresql:17.11-202610050823-standard-bookworm@sha256:49c1dd79092d7d8dad03d07151ef7157416e233576c639af8d60ec02c4ae297d
 ARG PG_VERSION=17
 
 # =============================================================================
